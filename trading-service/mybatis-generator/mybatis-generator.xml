@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE generatorConfiguration
+        PUBLIC "-//mybatis.org//DTD MyBatis Generator Configuration 1.0//EN"
+        "http://mybatis.org/dtd/mybatis-generator-config_1_0.dtd">
+
+<generatorConfiguration>
+    <context id="PgSql" defaultModelType="flat" targetRuntime="MyBatis3">
+        <plugin type="org.mybatis.generator.plugins.SerializablePlugin"/>
+        <plugin type="org.mybatis.generator.plugins.ToStringPlugin" />
+        <commentGenerator>
+            <!-- 不希望生成的注释中包含时间戳 -->
+            <property name="suppressDate" value="true"/>
+            <!-- 添加 db 表中字段的注释 -->
+            <property name="addRemarkComments" value="true"/>
+        </commentGenerator>
+        <jdbcConnection
+                driverClass="org.postgresql.Driver"
+                connectionURL="jdbc:postgresql://aws-jp-google-allmodule-pg-nonprod.ckcvjkzxh8bd.ap-northeast-1.rds.amazonaws.com:5432/trade_dev"
+                userId="trade_readwrite_dev"
+                password="N73UDa#U7PVp2Z)VJl9gVu"/>
+        <javaTypeResolver type="com.google.backend.common.mybatis.generate.resolver.OtherToJsonbJavaTypeResolver"/>
+        <javaModelGenerator targetPackage="com.google.backend.trading.dao.model" targetProject="src/main/java"/>
+        <sqlMapGenerator targetPackage="mybatis" targetProject="src/main/resources"/>
+        <javaClientGenerator targetPackage="com.google.backend.trading.dao.mapper" targetProject="src/main/java"
+                             type="XMLMAPPER"/>
+<!--        <table tableName="trade_funding_rate" mapperName="DefaultTradeFundingRateMapper">-->
+<!--            <property name="modelOnly" value="false"/>-->
+<!--            <generatedKey column="id" sqlStatement="JDBC" identity="true"/>-->
+<!--        </table>-->
+<!--        <table tableName="trade_margin_order_modification" mapperName="DefaultTradeMarginOrderModificationMapper">-->
+<!--            <property name="modelOnly" value="false"/>-->
+<!--            <generatedKey column="id" sqlStatement="JDBC" identity="true"/>-->
+<!--        </table>-->
+<!--        <table tableName="trade_negative_balance_funding_cost" mapperName="DefaultTradeNegativeBalanceFundingCostMapper">-->
+<!--            <property name="modelOnly" value="false"/>-->
+<!--            <generatedKey column="id" sqlStatement="JDBC" identity="true"/>-->
+<!--        </table>-->
+<!--        <table tableName="trade_position" mapperName="DefaultTradePositionMapper">-->
+<!--            <property name="modelOnly" value="false"/>-->
+<!--            <generatedKey column="id" sqlStatement="JDBC" identity="true"/>-->
+<!--        </table>-->
+<!--        <table tableName="trade_position_funding_cost" mapperName="DefaultTradePositionFundingCostMapper">-->
+<!--            <property name="modelOnly" value="false"/>-->
+<!--            <generatedKey column="id" sqlStatement="JDBC" identity="true"/>-->
+<!--        </table>-->
+<!--        <table tableName="trade_spot_margin_middle_order" mapperName="DefaultTradeSpotMarginMiddleOrderMapper">-->
+<!--            <property name="modelOnly" value="false"/>-->
+<!--            <generatedKey column="id" sqlStatement="JDBC" identity="true"/>-->
+<!--        </table>-->
+<!--        <table tableName="trade_spot_order" mapperName="DefaultTradeSpotOrderMapper">-->
+<!--            <property name="modelOnly" value="false"/>-->
+<!--            <generatedKey column="id" sqlStatement="JDBC" identity="true"/>-->
+<!--        </table>-->
+<!--        <table tableName="trade_spot_order_modification" mapperName="DefaultTradeSpotOrderModificationMapper">-->
+<!--            <property name="modelOnly" value="false"/>-->
+<!--            <generatedKey column="id" sqlStatement="JDBC" identity="true"/>-->
+<!--        </table>-->
+<!--        <table tableName="trade_swap_order" mapperName="DefaultTradeSwapOrderMapper">-->
+<!--            <property name="modelOnly" value="false"/>-->
+<!--            <generatedKey column="id" sqlStatement="JDBC" identity="true"/>-->
+<!--        </table>-->
+<!--        <table tableName="trade_transaction" mapperName="DefaultTradeTransactionMapper">-->
+<!--            <property name="modelOnly" value="false"/>-->
+<!--            <generatedKey column="id" sqlStatement="JDBC" identity="true"/>-->
+<!--        </table>-->
+<!--        <table tableName="trade_user_market_favorite" mapperName="DefaultTradeUserMarketFavoriteMapper">-->
+<!--            <property name="modelOnly" value="false"/>-->
+<!--            <generatedKey column="id" sqlStatement="JDBC" identity="true"/>-->
+<!--            <columnOverride column="symbol_arr" javaType="String[]" typeHandler="org.apache.ibatis.type.ArrayTypeHandler"/>-->
+<!--        </table>-->
+<!--        <table tableName="trade_user_page_setting" mapperName="DefaultTradeUserPageSettingMapper">-->
+<!--            <property name="modelOnly" value="false"/>-->
+<!--            <generatedKey column="id" sqlStatement="JDBC" identity="true"/>-->
+<!--            <columnOverride column="price_card" typeHandler="com.google.backend.trading.framework.mybatis.JsonTypeHandler"/>-->
+<!--        </table>-->
+<!--        <table tableName="trade_user_trade_setting" mapperName="DefaultTradeUserTradeSettingMapper">-->
+<!--            <property name="modelOnly" value="false"/>-->
+<!--            <generatedKey column="id" sqlStatement="JDBC" identity="true"/>-->
+<!--        </table>-->
+<!--        <table tableName="trade_user_system_setting" mapperName="DefaultUserSystemSettingMapper">-->
+<!--            <property name="modelOnly" value="false"/>-->
+<!--            <generatedKey column="id" sqlStatement="JDBC" identity="true"/>-->
+<!--        </table>-->
+<!--            <table tableName="trade_position_limit_user" mapperName="DefaultTradePositionLimitUserMapper">-->
+<!--                <property name="modelOnly" value="false"/>-->
+<!--                <generatedKey column="id" sqlStatement="JDBC" identity="true"/>-->
+<!--            </table>-->
+        <!--            <columnOverride column="price_card" typeHandler="com.google.backend.trading.framework.mybatis.JsonTypeHandler"/>-->
+        <!--        </table>-->
+        <!--        <table tableName="trade_user_trade_setting" mapperName="DefaultTradeUserTradeSettingMapper">-->
+        <!--            <property name="modelOnly" value="false"/>-->
+        <!--            <generatedKey column="id" sqlStatement="JDBC" identity="true"/>-->
+        <!--        </table>-->
+        <!--        <table tableName="trade_user_system_setting" mapperName="DefaultUserSystemSettingMapper">-->
+        <!--            <property name="modelOnly" value="false"/>-->
+        <!--            <generatedKey column="id" sqlStatement="JDBC" identity="true"/>-->
+        <!--        </table>-->
+        <!--            <table tableName="trade_position_limit_user" mapperName="DefaultTradePositionLimitUserMapper">-->
+        <!--                <property name="modelOnly" value="false"/>-->
+        <!--                <generatedKey column="id" sqlStatement="JDBC" identity="true"/>-->
+        <!--            </table>-->
+        <!--            <table tableName="trade_user_alarm_price" mapperName="DefaultTradeUserAlarmPriceMapper">-->
+        <!--                <property name="modelOnly" value="false"/>-->
+        <!--                <generatedKey column="id" sqlStatement="JDBC" identity="true"/>-->
+        <!--            </table>-->
+        <!--            <table tableName="trade_user_market_favorite_lite" mapperName="DefaultTradeUserMarketFavoriteLiteMapper">-->
+        <!--                <property name="modelOnly" value="false"/>-->
+        <!--                <generatedKey column="id" sqlStatement="JDBC" identity="true"/>-->
+        <!--                <columnOverride column="symbol_arr" javaType="String[]" typeHandler="org.apache.ibatis.type.ArrayTypeHandler"/>-->
+        <!--            </table>-->
+        <!--&lt;!&ndash;            <table tableName="trade_position_limit_user" mapperName="DefaultTradePositionLimitUserMapper">&ndash;&gt;-->
+        <!--&lt;!&ndash;                <property name="modelOnly" value="false"/>&ndash;&gt;-->
+        <!--&lt;!&ndash;                <generatedKey column="id" sqlStatement="JDBC" identity="true"/>&ndash;&gt;-->
+        <!--&lt;!&ndash;            </table>&ndash;&gt;-->
+        <!--        <table tableName="trade_fee_default_config" mapperName="DefaultTradeFeeDefaultConfigMapper">-->
+        <!--            <property name="modelOnly" value="false"/>-->
+        <!--            <generatedKey column="id" sqlStatement="JDBC" identity="true"/>-->
+        <!--        </table>-->
+        <!--        <table tableName="trade_fee_user_config" mapperName="DefaultTradeFeeUserConfigMapper">-->
+        <!--            <property name="modelOnly" value="false"/>-->
+        <!--            <generatedKey column="id" sqlStatement="JDBC" identity="true"/>-->
+        <!--        </table>-->
+        <!--        <table tableName="trade_funding_disable" mapperName="DefaultTradeFundingDisableMapper">-->
+        <!--            <property name="modelOnly" value="false"/>-->
+        <!--            <generatedKey column="id" sqlStatement="JDBC" identity="true"/>-->
+        <!--            <columnOverride column="symbol_arr" javaType="String[]"-->
+        <!--                            typeHandler="org.apache.ibatis.type.ArrayTypeHandler"/>-->
+        <!--        </table>-->
+        <!--        <table tableName="trade_user_booking_list" mapperName="DefaultTradeUserBookingListMapper">-->
+        <!--            <property name="modelOnly" value="false"/>-->
+        <!--            <generatedKey column="id" sqlStatement="JDBC" identity="true"/>-->
+        <!--        </table>-->
+        <!--        <table tableName="trade_position_limit_user" mapperName="DefaultTradePositionLimitUserMapper">-->
+        <!--            <property name="modelOnly" value="false"/>-->
+        <!--            <generatedKey column="id" sqlStatement="JDBC" identity="true"/>-->
+        <!--        </table>-->
+        <!--        <table tableName="trade_user_system_setting" mapperName="DefaultUserSystemSettingMapper">-->
+        <!--            <property name="modelOnly" value="false"/>-->
+        <!--            <generatedKey column="id" sqlStatement="JDBC" identity="true"/>-->
+        <!--        </table>-->
+    </context>
+</generatorConfiguration>

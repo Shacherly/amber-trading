@@ -1,0 +1,40 @@
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+apiVersion: storage.k8s.io/v1
+metadata:
+  name: google-sensors-data
+provisioner: efs.csi.aws.com
+allowVolumeExpansion: true
+reclaimPolicy: Retain
+volumeBindingMode: Immediate
+
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: PVCAPPNAME-BRANCH-sensors-data
+  namespace: <IMAGE_NAMESPACE>
+spec:
+  capacity:
+    storage: 50Gi
+  volumeMode: Filesystem
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: google-sensors-data
+  csi:
+    driver: efs.csi.aws.com
+    volumeHandle: FS_ID
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: PVCAPPNAME-BRANCH-sensors-data
+  namespace: <IMAGE_NAMESPACE>
+spec:
+  storageClassName: google-sensors-data
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 50Gi

@@ -1,0 +1,491 @@
+pipeline {
+  agent {
+    kubernetes {
+      yaml """
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    app: jenkins-slave-pod
+spec:
+  containers:
+  - name: jnlp
+    image: 933277528084.dkr.ecr.ap-northeast-1.amazonaws.com/devops_prod_jp_cicdshare-jenkinsslave-jnlp6:3.0.1
+    args:
+    - \$(JENKINS_SECRET)
+    - \$(JENKINS_NAME)
+    volumeMounts:
+    - name: docker-socket
+      mountPath: /var/run/docker.sock
+      readOnly: true     
+    - name: jenkins-share
+      mountPath: /home/jenkins/qy_wechat_sendshell/qy_wechat.sh
+      readOnly: true
+      subPath: qy_wechat.sh
+    - name: efs-piplineshare
+      subPath: awscli
+      mountPath: /home/jenkins/awscli
+    - name: efs-piplineshare
+      subPath: kubectl
+      mountPath: /home/jenkins/kubectl
+    - name: efs-piplineshare
+      subPath: pipline_script
+      mountPath: /home/jenkins/pipline_script
+    - name: shared-data
+      mountPath: /usr/src/
+    - name: efs-piplineshare
+      subPath: skywalking_tar/agent
+      mountPath: /home/jenkins/skywalking/agent
+  - name: maven
+    image: maven:3.6.3-jdk-8
+    command:
+    - cat
+    tty: true
+    volumeMounts:
+    - name: efs-piplineshare
+      subPath: javacommon-m2-cache
+      mountPath: /root/.m2 
+    - name: shared-data
+      mountPath: /usr/src/
+    - name: jenkins-share
+      mountPath: /usr/share/maven/conf/settings.xml
+      readOnly: true
+      subPath: settings.xml
+  volumes:
+    - name: jenkins-share
+      configMap:
+        name: jenkins-share
+    - name: efs-piplineshare
+      persistentVolumeClaim:
+        claimName: efs-piplineshare
+    - name: docker-socket
+      hostPath:
+        path: /var/run/docker.sock
+    - name: shared-data
+      emptyDir: {}
+"""      
+    }
+  }
+	options {
+        ansiColor('xterm')
+        timestamps()
+        timeout(15)
+    }
+  triggers {
+    GenericTrigger(
+     genericVariables: [
+      [key: 'ref', value: '$.ref']
+     ],
+     causeString: 'Triggered on $ref',
+     token: 'google_alltest_jp_trade',
+     printContributedVariables: true,
+     printPostContent: true,
+     silentResponse: false,
+     regexpFilterText: '$ref',
+     regexpFilterExpression: 'refs/heads/' + BRANCH_NAME
+    )
+  }
+environment 
+{
+    alpha_namespacename='google-alpha'                            //--------------需要变更的配置行
+    test_namespacename='google-test'                            //--------------需要变更的配置行
+    preview_namespacename='google-preveiw'                            //--------------需要变更的配置行
+    uat_namespacename='google-uat'
+    prod_namespacename='google'                            //--------------需要变更的配置行
+    dev_namespacename='google-dev'
+    sit_namespacename='google-sit'
+    sit_gray_namespacename='google-sit-gray'
+    ENV_ALPHA_BRANCH='alpha'                                       //--------------需要变更的配置行
+    ENV_TEST_BRANCH='test'                                        //--------------需要变更的配置行
+    ENV_PREVIEW_BRANCH='preview'                                    //--------------需要变更的配置行
+    ENV_PROD_BRANCH='master'                               //--------------需要变更的配置行
+    ENV_UAT_BRANCH='uat'
+    ENV_SIT_BRANCH='sit'
+    ENV_DEV_BRANCH='dev'
+    ENV_SIT_GRAY_BRANCH='sit-gray'
+    BUILD_ENV_ALPHA='alpha'
+    ENV_ALPHA_DOCKER_ENTRYPOINT_ENV='alpha'                                       //--------------需要变更的配置行
+    ENV_SIT_GRAY_DOCKER_ENTRYPOINT_ENV='sit-gray'                                       //--------------需要变更的配置行
+    ENV_TEST_DOCKER_ENTRYPOINT_ENV='test'                                        //--------------需要变更的配置行
+    ENV_PREVIEW_DOCKER_ENTRYPOINT_ENV='preview'                                    //--------------需要变更的配置行
+    ENV_PROD_DOCKER_ENTRYPOINT_ENV='prod'                                //--------------需要变更的配置行
+    ENV_UAT_DOCKER_ENTRYPOINT_ENV='uat'
+    ENV_DEV_DOCKER_ENTRYPOINT_ENV='dev'
+    ENV_SIT_DOCKER_ENTRYPOINT_ENV='sit'
+    k8s_yaml_filename='google-trading-deployment.yaml'                    //--------------需要变更的配置行
+    k8s_yaml_dev_filename='google-trading-dev-deployment.yaml'                    //--------------需要变更的配置行
+    k8s_yaml_sit_filename='google-trading-sit-deployment.yaml'                    //--------------需要变更的配置行
+    k8s_yaml_uat_filename='google-trading-uat-deployment.yaml'                    //--------------需要变更的配置行
+    k8s_yaml_prod_filename='google-trading-prod-deployment.yaml'                    //--------------需要变更的配置行
+    k8s_yaml_alpha_filename='google-trading-alpha-deployment.yaml'                    //--------------需要变更的配置行
+    k8s_yaml_pvc_all_filename='google-sensors-pv-pvc-all.yaml'
+    k8s_worlkload_type='deployment'
+    k8s_worlkload_name='google-trading'
+    k8s_worlkload_gray_name='google-trading-gray'
+    Dockerfile_name='Dockerfile'                    //--------------需要变更的配置行
+    Dockerfile_sit_name='Dockerfile_sit'
+    alltestenv_eks_accesskey = credentials('aws-eks-app-aceup-test')                     //--------------需要变更的配置行
+    prodenv_eks_accesskey = credentials('AWS-JP-google-EKS-PROD')                     //--------------需要变更的配置行
+    alltestenv_eks_name='AWS-JP-APP-ACEUP-EKS-TEST'                        //--------------需要变更的配置行
+    prodenv_eks_name='AWS-JP-google-EKS-PROD'                 //--------------需要变更的配置行  prod cluster 集群现在还没有先发到测试集群验证
+    local_kube_path='/home/jenkins/kubectl '
+    alltestenv_imageName='google_alltest_jp_trading'                            //--------------需要变更的配置行
+    prodenv_imageName='google_prod_jp_trading'                            //--------------需要变更的配置行
+    awsregion='ap-northeast-1'                           //--------------需要变更的配置行
+    aws_ecr_path='933277528084.dkr.ecr.ap-northeast-1.amazonaws.com'                  //--------------需要变更的配置行
+    G_aws_devops_wechat_token = credentials('G_aws_devops_wechat_token')                   //--------------需要变更的配置行
+    docker_root_pwd = credentials('docker_root_pwd')                   //--------------需要变更的配置行
+    stunnel_dev = credentials('trading-stunnel-dev.conf')
+    stunnel_sit = credentials('trading-stunnel-sit.conf')
+    stunnel_uat = credentials('trading-stunnel-uat.conf')
+    stunnel_prod = credentials('trading-stunnel-prod.conf')
+    //credentials支持 secret 文本，带密码的用户名，以及 secret 文件凭据
+    imageTag = sh(returnStdout: true,script: 'git describe --tags --always').trim()      
+    qy_wechat = '/home/jenkins/qy_wechat_sendshell/qy_wechat.sh'
+    local_awscli_path = '/home/jenkins/awscli/aws/dist/aws'
+    local_skywalking_agent='/home/jenkins/skywalking/agent'
+    mavenconfig_path='/home/jenkins/mavenconfig/settings.xml'
+    mongo_ssl_jks_testenv='/home/jenkins/pipline_script/mongo_ssl_testenv/rds-truststore.jks'
+    jenkinsslave_homedir='/root'
+    jenkins_k8s_deployment_health_check_filename='/home/jenkins/pipline_script/jenkins_k8s_deployment_health_check.sh'
+    testmirror='933277528084.dkr.ecr.ap-northeast-1.amazonaws.com/googleapp_jdk8-stunnel-ssl-skywalking:v1'
+    prodmirror='933277528084.dkr.ecr.ap-northeast-1.amazonaws.com/google_prod_jp_jdk8_sky_stunnel:v1'
+    test_Affinity='AWS-JP-APP-ACEUP-EKS-TEST-nodegroup4'
+    prod_Affinity='AWS-JP-google-EKS-PROD-TRADING01'
+    prodenv_kube_config = credentials('AWS-JP-google-EKS-PROD')
+    prod_skywalking = 'skywalking-prod-oap.googleainsider.com:11800'
+    test_skywalking = 'skywalking-test-oap.googleainsider.com:11800'
+    newtestenv_eks_accesskey = credentials('AWS-JP-google-EKS-TEST')
+    newtest_Affinity='AWS-JP-google-EKS-TEST-BACKEND01'
+    test_fsid='fs-0b8c302b'
+    prod_fsid='fs-09c5dfa663632930f'
+    newtest_fsid='fs-0903b29ff123cace7'
+}
+
+stages 
+{
+  stage('maven compile') {
+    steps {
+      container('maven') {
+        sh """
+        mvn clean package -U
+        """
+      }
+    }
+  }
+   stage('build image[sit_env]') {
+    when {
+       anyOf {
+        branch "${env.ENV_SIT_BRANCH}";
+        branch "${env.ENV_SIT_GRAY_BRANCH}"
+        }
+      }
+    steps {
+      container('jnlp') {
+        sh """
+        [ -d dockersrc ] && echo "dockersrc file exsited!" || mkdir -p dockersrc
+        cp -rp ./devops-cicd/${env.Dockerfile_sit_name} dockersrc/${env.Dockerfile_name}
+        cp -rp ${env.local_skywalking_agent} dockersrc/
+        mkdir -p dockersrc/stunnel
+        cp -rf ${env.stunnel_sit} dockersrc/stunnel/redis-cli-sit.conf
+        mv trading-service/target/trading-service-1.0-SNAPSHOT.jar dockersrc/
+        cd dockersrc/
+        sed -i "s/<IMAGE_ROOT_PASSW>/${env.docker_root_pwd}/g" ${env.Dockerfile_name}
+        sed -i "s#BASEMIRROR#${env.testmirror}#g" ${env.Dockerfile_name}
+        ${env.local_awscli_path} ecr get-login-password --region ${env.awsregion} | docker login --username AWS --password-stdin ${env.aws_ecr_path}
+        docker build  --network=host -t ${env.alltestenv_imageName}:${env.imageTag}-${env.BRANCH_NAME}   .
+        docker tag ${env.alltestenv_imageName}:${env.imageTag}-${env.BRANCH_NAME} ${env.aws_ecr_path}/${env.alltestenv_imageName}:${env.imageTag}-${env.BRANCH_NAME}
+        docker push ${env.aws_ecr_path}/${env.alltestenv_imageName}:${env.imageTag}-${env.BRANCH_NAME} 
+        """
+      }
+    }
+    }
+  stage('build image not [sit_env]') {
+    when {
+      not{ branch "${env.ENV_PROD_BRANCH}" }
+      not{ branch "${env.ENV_SIT_BRANCH}" }
+      not{ branch "${env.ENV_SIT_GRAY_BRANCH}" }
+      }
+    steps {
+      container('jnlp') {
+        sh """
+        [ -d dockersrc ] && echo "dockersrc file exsited!" || mkdir -p dockersrc
+        cp -rp ./devops-cicd/${env.Dockerfile_name} dockersrc/
+        cp -rp ${env.local_skywalking_agent} dockersrc/
+        mkdir -p dockersrc/stunnel
+        cp -rf ${env.stunnel_dev} dockersrc/stunnel/redis-cli-dev.conf
+        cp -rf ${env.stunnel_uat} dockersrc/stunnel/redis-cli-uat.conf
+        mv trading-service/target/trading-service-1.0-SNAPSHOT.jar dockersrc/
+        cd dockersrc/
+        sed -i "s/<IMAGE_ROOT_PASSW>/${env.docker_root_pwd}/g" ${env.Dockerfile_name}
+        sed -i "s#BASEMIRROR#${env.testmirror}#g" ${env.Dockerfile_name}
+        ${env.local_awscli_path} ecr get-login-password --region ${env.awsregion} | docker login --username AWS --password-stdin ${env.aws_ecr_path}
+        docker build  --network=host -t ${env.alltestenv_imageName}:${env.imageTag}-${env.BRANCH_NAME} .
+        docker tag ${env.alltestenv_imageName}:${env.imageTag}-${env.BRANCH_NAME} ${env.aws_ecr_path}/${env.alltestenv_imageName}:${env.imageTag}-${env.BRANCH_NAME}
+        docker push ${env.aws_ecr_path}/${env.alltestenv_imageName}:${env.imageTag}-${env.BRANCH_NAME} 
+        """
+      }
+    }
+    }
+  stage('build image[prod_env]') {
+    when {
+      branch "${env.ENV_PROD_BRANCH}"
+     }
+    steps {
+      container('jnlp') {
+        sh """
+        [ -d dockersrc ] && echo "dockersrc file exsited!" || mkdir -p dockersrc
+        cp -rp ./devops-cicd/${env.Dockerfile_name} dockersrc/
+        cp -rp ${env.local_skywalking_agent} dockersrc/
+        mkdir -p dockersrc/stunnel
+        cp -rf ${env.stunnel_prod} dockersrc/stunnel/redis-cli-prod.conf
+        mv trading-service/target/trading-service-1.0-SNAPSHOT.jar  dockersrc/
+        cd dockersrc/
+        sed -i "s/<IMAGE_ROOT_PASSW>/${env.docker_root_pwd}/g" ${env.Dockerfile_name}
+        sed -i "s#BASEMIRROR#${env.prodmirror}#g" ${env.Dockerfile_name}
+        ${env.local_awscli_path} ecr get-login-password --region ${env.awsregion} | docker login --username AWS --password-stdin ${env.aws_ecr_path}
+        docker build  --network=host -t ${env.prodenv_imageName}:${env.imageTag}-${env.BRANCH_NAME} .
+        docker tag ${env.prodenv_imageName}:${env.imageTag}-${env.BRANCH_NAME} ${env.aws_ecr_path}/${env.prodenv_imageName}:${env.imageTag}-${env.BRANCH_NAME}
+        docker push ${env.aws_ecr_path}/${env.prodenv_imageName}:${env.imageTag}-${env.BRANCH_NAME} 
+        """
+      }
+    }
+  }
+  stage('deploy[alpha_env]') {
+    when {
+      branch "${env.ENV_ALPHA_BRANCH}"
+      }    
+    steps {
+      container('jnlp') {
+        sh """
+        cp -rp ./devops-cicd/* .
+        sed -ie "s/<IMAGE_NAMESPACE>/${env.alpha_namespacename}/g" ${env.k8s_yaml_alpha_filename}
+        sed -ie "s/<IMAGE_NAME>/${env.alltestenv_imageName}/g" ${env.k8s_yaml_alpha_filename}
+        sed -ie "s/<IMAGE_TAG>/${env.imageTag}-${env.BRANCH_NAME}/g" ${env.k8s_yaml_alpha_filename}
+        sed -ie "s/<DOCKER_ENTRYPOINT_ENV>/${env.ENV_ALPHA_DOCKER_ENTRYPOINT_ENV}/g" ${env.k8s_yaml_alpha_filename}
+        sed -ie "s/BRANCH/${env.ENV_ALPHA_BRANCH}/g" ${env.k8s_yaml_alpha_filename}
+        sed -ie "s/AFFINITY/${env.newtest_Affinity}/g" ${env.k8s_yaml_alpha_filename}
+        sed -ie "s/ENV_SKYWALKING/${env.test_skywalking}/g" ${env.k8s_yaml_alpha_filename}
+        sed -ie "s/PVCAPPNAME/${env.k8s_worlkload_name}/g" ${env.k8s_yaml_alpha_filename}
+        sed -ie "s/<IMAGE_NAMESPACE>/${env.alpha_namespacename}/g" ${env.k8s_yaml_pvc_all_filename}
+        sed -ie "s/BRANCH/${env.ENV_ALPHA_BRANCH}/g" ${env.k8s_yaml_pvc_all_filename}
+        sed -ie "s/PVCAPPNAME/${env.k8s_worlkload_name}/g" ${env.k8s_yaml_pvc_all_filename}
+        sed -ie "s/FS_ID/${env.newtest_fsid}/g" ${env.k8s_yaml_pvc_all_filename}
+        mkdir -p ${env.jenkinsslave_homedir}/.kube/
+        cp -rp ${newtestenv_eks_accesskey}  ${env.jenkinsslave_homedir}/.kube/config
+        ${env.local_kube_path} apply -f ${env.k8s_yaml_pvc_all_filename} 
+        ${env.local_kube_path} apply -f ${env.k8s_yaml_alpha_filename}
+        ${env.jenkins_k8s_deployment_health_check_filename}  ${env.local_kube_path}   ${env.k8s_worlkload_type}   ${env.k8s_worlkload_name}  ${env.alpha_namespacename}  ${env.alltestenv_imageName} ${env.imageTag}-${env.BRANCH_NAME}  
+        """
+      }
+    }
+  }
+    stage('deploy[uat_env]') {
+    when {
+      branch "${env.ENV_UAT_BRANCH}"
+      }    
+    steps {
+      container('jnlp') {
+        sh """
+        cp -rp ./devops-cicd/* .
+        sed -ie "s/<IMAGE_NAMESPACE>/${env.uat_namespacename}/g" ${env.k8s_yaml_uat_filename}
+        sed -ie "s/<IMAGE_NAME>/${env.alltestenv_imageName}/g" ${env.k8s_yaml_uat_filename}
+        sed -ie "s/<IMAGE_TAG>/${env.imageTag}-${env.BRANCH_NAME}/g" ${env.k8s_yaml_uat_filename}
+        sed -ie "s/<DOCKER_ENTRYPOINT_ENV>/${env.ENV_UAT_DOCKER_ENTRYPOINT_ENV}/g" ${env.k8s_yaml_uat_filename}
+        sed -ie "s/BRANCH/${env.ENV_UAT_BRANCH}/g" ${env.k8s_yaml_uat_filename}
+        sed -ie "s/AFFINITY/${env.test_Affinity}/g" ${env.k8s_yaml_uat_filename}
+        sed -ie "s/ENV_SKYWALKING/${env.test_skywalking}/g" ${env.k8s_yaml_uat_filename}
+        sed -ie "s/PVCAPPNAME/${env.k8s_worlkload_name}/g" ${env.k8s_yaml_uat_filename}
+        sed -ie "s/<IMAGE_NAMESPACE>/${env.uat_namespacename}/g" ${env.k8s_yaml_pvc_all_filename}
+        sed -ie "s/BRANCH/${env.ENV_UAT_BRANCH}/g" ${env.k8s_yaml_pvc_all_filename}
+        sed -ie "s/PVCAPPNAME/${env.k8s_worlkload_name}/g" ${env.k8s_yaml_pvc_all_filename}
+        sed -ie "s/FS_ID/${env.test_fsid}/g" ${env.k8s_yaml_pvc_all_filename}
+        mkdir  ${env.jenkinsslave_homedir}/.aws
+        touch  ${env.jenkinsslave_homedir}/.aws/config  ${env.jenkinsslave_homedir}/.aws/credentials
+        echo '[default]' >> ${env.jenkinsslave_homedir}/.aws/credentials
+        echo '[default]' >> ${env.jenkinsslave_homedir}/.aws/config
+        echo "aws_access_key_id = ${env.alltestenv_eks_accesskey_USR}" >> ${env.jenkinsslave_homedir}/.aws/credentials
+        echo "aws_secret_access_key = ${env.alltestenv_eks_accesskey_PSW}" >> ${env.jenkinsslave_homedir}/.aws/credentials
+        echo "region = ${env.awsregion}" >> ${env.jenkinsslave_homedir}/.aws/config
+        ln -sf ${env.local_awscli_path} /usr/local/bin/aws
+        aws  eks --region ${env.awsregion} update-kubeconfig --name ${env.alltestenv_eks_name}
+        ${env.local_kube_path} apply -f ${env.k8s_yaml_pvc_all_filename}
+        ${env.local_kube_path} apply -f ${env.k8s_yaml_uat_filename}
+        ${env.jenkins_k8s_deployment_health_check_filename}  ${env.local_kube_path}   ${env.k8s_worlkload_type}   ${env.k8s_worlkload_name}  ${env.uat_namespacename}  ${env.alltestenv_imageName} ${env.imageTag}-${env.BRANCH_NAME}  
+        """
+      }
+    }
+  }
+    stage('deploy[dev_env]') {
+    when {
+      branch "${env.ENV_DEV_BRANCH}"
+      }    
+    steps {
+      container('jnlp') {
+        sh """
+        cp -rp ./devops-cicd/* .
+        sed -ie "s/<IMAGE_NAMESPACE>/${env.dev_namespacename}/g" ${env.k8s_yaml_dev_filename}
+        sed -ie "s/<IMAGE_NAME>/${env.alltestenv_imageName}/g" ${env.k8s_yaml_dev_filename}
+        sed -ie "s/<IMAGE_TAG>/${env.imageTag}-${env.BRANCH_NAME}/g" ${env.k8s_yaml_dev_filename}
+        sed -ie "s/<DOCKER_ENTRYPOINT_ENV>/${env.ENV_DEV_DOCKER_ENTRYPOINT_ENV}/g" ${env.k8s_yaml_dev_filename}
+         sed -ie "s/BRANCH/${env.ENV_DEV_BRANCH}/g" ${env.k8s_yaml_dev_filename}
+        sed -ie "s/AFFINITY/${env.newtest_Affinity}/g" ${env.k8s_yaml_dev_filename}
+        sed -ie "s/ENV_SKYWALKING/${env.test_skywalking}/g" ${env.k8s_yaml_dev_filename}
+        sed -ie "s/PVCAPPNAME/${env.k8s_worlkload_name}/g" ${env.k8s_yaml_dev_filename}
+        sed -ie "s/<IMAGE_NAMESPACE>/${env.dev_namespacename}/g" ${env.k8s_yaml_pvc_all_filename}
+        sed -ie "s/BRANCH/${env.ENV_DEV_BRANCH}/g" ${env.k8s_yaml_pvc_all_filename}
+        sed -ie "s/PVCAPPNAME/${env.k8s_worlkload_name}/g" ${env.k8s_yaml_pvc_all_filename}
+        sed -ie "s/FS_ID/${env.newtest_fsid}/g" ${env.k8s_yaml_pvc_all_filename}
+        mkdir -p ${env.jenkinsslave_homedir}/.kube/
+        cp -rp ${newtestenv_eks_accesskey}  ${env.jenkinsslave_homedir}/.kube/config
+        #mkdir  ${env.jenkinsslave_homedir}/.aws
+        #touch  ${env.jenkinsslave_homedir}/.aws/config  ${env.jenkinsslave_homedir}/.aws/credentials
+        #echo '[default]' >> ${env.jenkinsslave_homedir}/.aws/credentials
+        #echo '[default]' >> ${env.jenkinsslave_homedir}/.aws/config
+        #echo "aws_access_key_id = ${env.alltestenv_eks_accesskey_USR}" >> ${env.jenkinsslave_homedir}/.aws/credentials
+        #echo "aws_secret_access_key = ${env.alltestenv_eks_accesskey_PSW}" >> ${env.jenkinsslave_homedir}/.aws/credentials
+        #echo "region = ${env.awsregion}" >> ${env.jenkinsslave_homedir}/.aws/config
+        #ln -sf ${env.local_awscli_path} /usr/local/bin/aws
+        #aws  eks --region ${env.awsregion} update-kubeconfig --name ${env.alltestenv_eks_name}
+        ${env.local_kube_path} apply -f ${env.k8s_yaml_pvc_all_filename}
+        ${env.local_kube_path} apply -f ${env.k8s_yaml_dev_filename}
+        ${env.jenkins_k8s_deployment_health_check_filename}  ${env.local_kube_path}   ${env.k8s_worlkload_type}   ${env.k8s_worlkload_name}  ${env.dev_namespacename}  ${env.alltestenv_imageName} ${env.imageTag}-${env.BRANCH_NAME}  
+        """
+       }
+     }
+   }
+   stage('deploy[sit_gray_env]') {
+    when {
+      branch "${env.ENV_SIT_GRAY_BRANCH}"
+      }    
+    steps {
+      container('jnlp') {
+        sh """
+        cp -rp ./devops-cicd/* .
+        sed -ie "s/<IMAGE_NAMESPACE>/${env.sit_gray_namespacename}/g" ${env.k8s_yaml_sit_filename}
+        sed -ie "s/<IMAGE_NAME>/${env.alltestenv_imageName}/g" ${env.k8s_yaml_sit_filename}
+        sed -ie "s/<IMAGE_TAG>/${env.imageTag}-${env.BRANCH_NAME}/g" ${env.k8s_yaml_sit_filename}
+        sed -ie "s/<DOCKER_ENTRYPOINT_ENV>/${env.ENV_SIT_DOCKER_ENTRYPOINT_ENV}/g" ${env.k8s_yaml_sit_filename}
+        sed -ie "s/BRANCH/${env.BRANCH_NAME}/g" ${env.k8s_yaml_sit_filename}
+        sed -ie "s/AFFINITY/${env.newtest_Affinity}/g" ${env.k8s_yaml_sit_filename}
+        sed -ie "s/ENV_SKYWALKING/${env.test_skywalking}/g" ${env.k8s_yaml_sit_filename}
+        sed -ie "s/PVCAPPNAME/${env.k8s_worlkload_name}/g" ${env.k8s_yaml_sit_filename}
+        sed -ie "s/<IMAGE_NAMESPACE>/${env.sit_gray_namespacename}/g" ${env.k8s_yaml_pvc_all_filename}
+        sed -ie "s/BRANCH/${env.BRANCH_NAME}/g" ${env.k8s_yaml_pvc_all_filename}
+        sed -ie "s/PVCAPPNAME/${env.k8s_worlkload_name}/g" ${env.k8s_yaml_pvc_all_filename}
+        sed -ie "s/FS_ID/${env.newtest_fsid}/g" ${env.k8s_yaml_pvc_all_filename}
+        mkdir -p ${env.jenkinsslave_homedir}/.kube/
+        cp -rp ${newtestenv_eks_accesskey}  ${env.jenkinsslave_homedir}/.kube/config
+        ${env.local_kube_path} apply -f ${env.k8s_yaml_pvc_all_filename}
+        ${env.local_kube_path} apply -f ${env.k8s_yaml_sit_filename}
+        ${env.jenkins_k8s_deployment_health_check_filename}  ${env.local_kube_path}   ${env.k8s_worlkload_type}   ${env.k8s_worlkload_name}  ${env.sit_gray_namespacename}  ${env.alltestenv_imageName} ${env.imageTag}-${env.BRANCH_NAME}  
+        """
+       }
+     }
+   }
+      stage('deploy[sit_env]') {
+    when {
+      branch "${env.ENV_SIT_BRANCH}"
+      }
+    steps {
+      container('jnlp') {
+        sh """
+        cp -rp ./devops-cicd/* .
+        sed -ie "s/<IMAGE_NAMESPACE>/${env.sit_namespacename}/g" ${env.k8s_yaml_sit_filename}
+        sed -ie "s/<IMAGE_NAME>/${env.alltestenv_imageName}/g" ${env.k8s_yaml_sit_filename}
+        sed -ie "s/<IMAGE_TAG>/${env.imageTag}-${env.BRANCH_NAME}/g" ${env.k8s_yaml_sit_filename}
+        sed -ie "s/<DOCKER_ENTRYPOINT_ENV>/${env.ENV_SIT_DOCKER_ENTRYPOINT_ENV}/g" ${env.k8s_yaml_sit_filename}
+        sed -ie "s/BRANCH/${env.BRANCH_NAME}/g" ${env.k8s_yaml_sit_filename}
+        sed -ie "s/AFFINITY/${env.newtest_Affinity}/g" ${env.k8s_yaml_sit_filename}
+        sed -ie "s/ENV_SKYWALKING/${env.test_skywalking}/g" ${env.k8s_yaml_sit_filename}
+        sed -ie "s/PVCAPPNAME/${env.k8s_worlkload_name}/g" ${env.k8s_yaml_sit_filename}
+        sed -ie "s/<IMAGE_NAMESPACE>/${env.sit_namespacename}/g" ${env.k8s_yaml_pvc_all_filename}
+        sed -ie "s/BRANCH/${env.BRANCH_NAME}/g" ${env.k8s_yaml_pvc_all_filename}
+        sed -ie "s/PVCAPPNAME/${env.k8s_worlkload_name}/g" ${env.k8s_yaml_pvc_all_filename}
+        sed -ie "s/FS_ID/${env.newtest_fsid}/g" ${env.k8s_yaml_pvc_all_filename}
+        mkdir -p ${env.jenkinsslave_homedir}/.kube/
+        cp -rp ${newtestenv_eks_accesskey}  ${env.jenkinsslave_homedir}/.kube/config
+        ${env.local_kube_path} apply -f ${env.k8s_yaml_pvc_all_filename}
+        ${env.local_kube_path} apply -f ${env.k8s_yaml_sit_filename}
+        ${env.jenkins_k8s_deployment_health_check_filename}  ${env.local_kube_path}   ${env.k8s_worlkload_type}   ${env.k8s_worlkload_name}  ${env.sit_namespacename}  ${env.alltestenv_imageName} ${env.imageTag}-${env.BRANCH_NAME}
+        """
+       }
+     }
+   }
+  stage('deploy[prod_env]') {
+    when {
+      branch "${env.ENV_PROD_BRANCH}"
+      }    
+    steps {
+      container('jnlp') {
+        sh """
+        cp -rp ./devops-cicd/* .
+        sed -ie "s/<IMAGE_NAMESPACE>/${env.prod_namespacename}/g" ${env.k8s_yaml_prod_filename}
+        sed -ie "s/<IMAGE_NAME>/${env.prodenv_imageName}/g" ${env.k8s_yaml_prod_filename}
+        sed -ie "s/<IMAGE_TAG>/${env.imageTag}-${env.BRANCH_NAME}/g" ${env.k8s_yaml_prod_filename}
+        sed -ie "s/<DOCKER_ENTRYPOINT_ENV>/${env.ENV_PROD_DOCKER_ENTRYPOINT_ENV}/g" ${env.k8s_yaml_prod_filename}
+         sed -ie "s/BRANCH/${env.ENV_PROD_DOCKER_ENTRYPOINT_ENV}/g" ${env.k8s_yaml_prod_filename}
+        sed -ie "s/AFFINITY/${env.prod_Affinity}/g" ${env.k8s_yaml_prod_filename}
+        sed -ie "s/ENV_SKYWALKING/${env.prod_skywalking}/g" ${env.k8s_yaml_prod_filename}
+        sed -ie "s/PVCAPPNAME/${env.k8s_worlkload_name}/g" ${env.k8s_yaml_prod_filename}
+        sed -ie "s/<IMAGE_NAMESPACE>/${env.prod_namespacename}/g" ${env.k8s_yaml_pvc_all_filename}
+        sed -ie "s/BRANCH/${env.ENV_PROD_DOCKER_ENTRYPOINT_ENV}/g" ${env.k8s_yaml_pvc_all_filename}
+        sed -ie "s/PVCAPPNAME/${env.k8s_worlkload_name}/g" ${env.k8s_yaml_pvc_all_filename}
+        sed -ie "s/FS_ID/${env.prod_fsid}/g" ${env.k8s_yaml_pvc_all_filename}
+        mkdir -p ${env.jenkinsslave_homedir}/.kube/
+        cp -rp ${env.prodenv_eks_accesskey}  ${env.jenkinsslave_homedir}/.kube/config
+        """
+        timeout(time: 5, unit: 'MINUTES') {
+        script {
+          input(
+            message: 'Should we continue?',
+            ok: "YES"
+           )
+         }
+        }
+        sh """
+        ${env.local_awscli_path} ecr get-login-password --region ${env.awsregion} | docker login --username AWS --password-stdin ${env.aws_ecr_path}
+        ${env.local_kube_path} apply -f ${env.k8s_yaml_pvc_all_filename}
+        ${env.local_kube_path} apply -f ${env.k8s_yaml_prod_filename}
+        ${env.jenkins_k8s_deployment_health_check_filename}  ${env.local_kube_path}   ${env.k8s_worlkload_type}   ${env.k8s_worlkload_name}  ${env.prod_namespacename}  ${env.prodenv_imageName} ${env.imageTag}-${env.BRANCH_NAME}  
+        """
+       }
+     }
+   }   
+}
+  
+post { 
+	always{
+	//always部分 pipeline运行结果为任何状态都运行
+          echo 'post stage'
+      //    junit 'target/surefire-reports/*.xml' 
+      }
+      success {
+          //当此Pipeline成功时打印消息
+          echo 'success'
+          //sh "sh  ${env.qy_wechat}  ${NODE_NAME} ${JOB_NAME} ${BUILD_URL}  ${GIT_COMMIT}  success  ${env.G_aws_devops_wechat_token}"
+          // 可以加上邮件、钉钉通知
+      }
+      failure {
+          echo 'failure'
+          // 可以加上邮件、钉钉通知
+          //sh "sh  ${env.qy_wechat}  ${NODE_NAME} ${JOB_NAME} ${BUILD_URL}  ${GIT_COMMIT}  failure ${env.G_aws_devops_wechat_token}"
+      }
+	unstable {
+          //当此Pipeline 为不稳定时打印消息
+          echo 'unstable'	
+         // sh "sh  ${env.qy_wechat}  ${NODE_NAME} ${JOB_NAME} ${BUILD_URL}  ${GIT_COMMIT}  unstable ${env.G_aws_devops_wechat_token}"
+	}
+	aborted {
+	    //当此Pipeline 终止时打印消息
+          echo 'aborted'	
+          //sh "sh  ${env.qy_wechat}  ${NODE_NAME} ${JOB_NAME} ${BUILD_URL}  ${GIT_COMMIT}  aborted ${env.G_aws_devops_wechat_token}"
+	}
+	changed {
+	    //当pipeline的状态与上一次build状态不同时打印消息
+          echo 'changed'		
+         // sh "sh  ${env.qy_wechat}  ${NODE_NAME} ${JOB_NAME} ${BUILD_URL}  ${GIT_COMMIT}  changed ${env.G_aws_devops_wechat_token}"
+	}        
+  }  
+}
+

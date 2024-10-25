@@ -1,0 +1,17 @@
+FROM BASEMIRROR
+MAINTAINER devops "devops@googlegroup.io"
+ENV KAFKA_OPTS -Djava.security.auth.login.config=/home/devops/ssl/users_jaas.conf
+ADD stunnel /etc/stunnel
+RUN echo "root:<IMAGE_ROOT_PASSW>" |chpasswd  && \
+    /usr/sbin/adduser -u 1000 -g devops devops -D && \
+    mkdir -p /home/devops/google-trading/ && \
+    chown -R devops.devops /home/devops/ && \
+    chown -R devops.devops /etc/stunnel /usr/bin/stunnel
+COPY *.jar  /home/devops/google-trading/google-trading-v0.0.1.jar
+WORKDIR  /home/devops/google-trading
+USER devops
+ENV APP_ENV <BUILD_ENV>
+EXPOSE  8010 8020 9999
+RUN echo '#!/bin/sh' >> /home/devops/start.sh && chmod +x /home/devops/start.sh
+RUN echo 'java ${KAFKA_OPTS}  ${JVM_OPTION} -javaagent:${SKYWALKING_JAR_PATH} -Dskywalking.agent.service_name=${SKYWALKING_AGENT_SERVICE_NAME}-${APP_ENV} -Dskywalking.collector.backend_service=${SKYWALKING_BACKEND_SERVICE_URL} -jar -server /home/devops/google-trading/google-trading-v0.0.1.jar --spring.profiles.active=${APP_ENV}'  >> /home/devops/start.sh
+ENTRYPOINT /home/devops/start.sh

@@ -1,0 +1,7 @@
+google:
+  confcenter:
+    enabled: true # 默认关闭. 如无从配置中心ETCD集群拉取配置需求可以设置为false. 只用加解密模块即可. 但涉及到使用密码自动装载的可能需要手动重写设置config进行注入
+    etcd:
+      endpoints: http://10.148.50.27:2379
+      username: google-trading-uat
+      password: MHCXZVoM6y8D

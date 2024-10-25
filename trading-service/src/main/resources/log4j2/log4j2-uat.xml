@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration xmlns:xi="http://www.w3.org/2001/XInclude" packages="org.apache.skywalking.apm.toolkit.log.log4j.v2.x">
+    <xi:include href="log4j2-appenders.xml"/>
+
+    <Loggers>
+        <!-- LOG everything at INFO level -->
+        <Root level="INFO">
+            <AppenderRef ref="Console"/>
+        </Root>
+
+        <!--http client 日志-->
+        <Logger name="org.apache.http" level="INFO"/>
+        <Logger name="com.google.backend.trading" level="INFO"/>
+        <!--请求日志-->
+        <Logger name="org.springframework.web.filter.CommonsRequestLoggingFilter" level="INFO"/>
+        <!--事务日志-->
+        <Logger name="org.springframework.jdbc.datasource" level="INFO"/>
+        <Logger name="com.alicp.jetcache" level="INFO"/>
+        <Logger name = "alarm" level="ERROR" additivity="false">
+            <AppenderRef ref="AlarmConsole"/>
+        </Logger>
+    </Loggers>
+
+</Configuration>

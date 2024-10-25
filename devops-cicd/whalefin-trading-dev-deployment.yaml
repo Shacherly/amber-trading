@@ -1,0 +1,187 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: <IMAGE_NAMESPACE>
+---
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    prometheus.io/scrape: 'true'
+    prometheus.io/port: '8020'
+    prometheus.io/path: '/trading/actuator/prometheus'
+  name: google-trading-svc
+  namespace: <IMAGE_NAMESPACE>
+spec:
+  ports:
+  - name: listenport
+    port: 8010
+    protocol: TCP
+    targetPort: 8010
+  - name: listenport2
+    port: 8020
+    protocol: TCP
+    targetPort: 8020
+  - name: listenport3
+    port: 9999
+    protocol: TCP
+    targetPort: 9999
+  selector:
+    app: google-trading
+  type: ClusterIP                      #clusterip删除重建service也会变。别的业务调用可以使用service dns名
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: google-trading
+  name: google-trading
+  namespace: <IMAGE_NAMESPACE>
+spec:
+  replicas: 1
+  strategy:
+    type: RollingUpdate #can be "Recreate" or "RollingUpdate". "RollingUpdate" is the default value
+  selector:
+    matchLabels:
+      app: google-trading
+  template:
+    metadata:
+      labels:
+        app: google-trading
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: eks.amazonaws.com/nodegroup
+                operator: In
+                values:
+                - AFFINITY
+      initContainers:
+      - name: init-sensordata
+        image: busybox:1.28
+        command: ['sh', '-c', 'chown -R devops:devops /sensordata/PVCAPPNAME/; chmod 777 -R /sensordata/PVCAPPNAME/']
+        volumeMounts:
+          - name: sensors
+            mountPath: /sensordata/PVCAPPNAME
+            subPath: sensordata/PVCAPPNAME/<DOCKER_ENTRYPOINT_ENV>  
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+        imagePullPolicy: Always    
+      containers:
+      - name: google-trading
+        image: 933277528084.dkr.ecr.ap-northeast-1.amazonaws.com/<IMAGE_NAME>:<IMAGE_TAG>
+        env:
+        - name: MY_POD_IP
+          valueFrom:
+            fieldRef:
+              fieldPath: status.podIP
+        - name: APP_ENV
+          value: <DOCKER_ENTRYPOINT_ENV>
+        - name: SKYWALKING_JAR_PATH
+          value: "/home/devops/agent/skywalking-agent.jar"
+        - name: SKYWALKING_AGENT_SERVICE_NAME
+          value: "google-trading"
+        - name: SKYWALKING_BACKEND_SERVICE_BASE36666
+          value: "11800"
+        - name: SKYWALKING_BACKEND_SERVICE_URL
+          value: ENV_SKYWALKING
+        - name: spring.cloud.nacos.username
+          value: nacos
+        - name: spring.cloud.nacos.password
+          value: nacos
+        - name: JVM_OPTION
+          value: "-Xms1536m -Xmx1536m"
+        - name: google_KMS_ACCESS
+          valueFrom:
+            secretKeyRef:
+              name: google-trading-BRANCH
+              key: google_KMS_ACCESS
+        - name: google_KMS_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: google-trading-BRANCH
+              key: google_KMS_SECRET
+        - name: google_CONFCENTER_APP_APPNAME
+          valueFrom:
+            secretKeyRef:
+              name: google-trading-BRANCH
+              key: google_CONFCENTER_APP_APPNAME
+        - name: google_CONFCENTER_ETCD_ENDPOINTS
+          valueFrom:
+            secretKeyRef:
+              name: google-trading-BRANCH
+              key: google_CONFCENTER_ETCD_ENDPOINTS
+        - name: google_CONFCENTER_ETCD_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: google-trading-BRANCH
+              key: google_CONFCENTER_ETCD_USERNAME
+        - name: google_CONFCENTER_ETCD_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: google-trading-BRANCH
+              key: google_CONFCENTER_ETCD_PASSWORD
+        - name: google_CONFCENTER_ENABLED
+          valueFrom:
+            secretKeyRef:
+              name: google-trading-BRANCH
+              key: google_CONFCENTER_ENABLED
+        - name: ENV
+          valueFrom:
+            secretKeyRef:
+              name: google-trading-BRANCH
+              key: ENV
+        securityContext:
+          allowPrivilegeEscalation: false
+          #runAsNonRoot: false      #just for initContainers，default is true
+          #privileged: false  # Don't allow privileged pods!
+          #runAsUser: 1000
+          #runAsGroup: 1000
+        lifecycle:
+          postStart:
+            exec:
+              command: ["/bin/sh", "-c", "echo \"MY_POD_IP:${MY_POD_IP},APP_ENV:${APP_ENV}\""] 
+          preStop:
+            exec:
+              command: ["/bin/sh","-c","echo 'preStop:优雅关闭';sleep 30"] 
+        resources:
+          requests:
+            memory: "500Mi"
+            cpu: "0.5"      #250m等同于0.25  
+          limits:
+            memory: "3172Mi"
+            cpu: "2"
+        ports:
+        - containerPort: 8010
+          name: listenport
+          protocol: TCP
+        - containerPort: 8020
+          name: listenport2
+          protocol: TCP
+        - containerPort: 9999
+          name: listenport3
+          protocol: TCP
+        readinessProbe:
+          httpGet:
+            path: /trading/actuator/health
+            port: 8020
+          initialDelaySeconds: 120
+          periodSeconds: 15
+        livenessProbe:
+          httpGet:
+            path: /trading/actuator/health
+            port: 8020
+          initialDelaySeconds: 120
+          periodSeconds: 15
+        volumeMounts:
+        - name: sensors
+          mountPath: /sensordata/PVCAPPNAME
+          subPath: sensordata/PVCAPPNAME/<DOCKER_ENTRYPOINT_ENV>
+      volumes:
+        - name: sensors
+          persistentVolumeClaim:
+            claimName: PVCAPPNAME-BRANCH-sensors-data
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 60

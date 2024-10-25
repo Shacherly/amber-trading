@@ -1,0 +1,132 @@
+spring:
+  datasource:
+#    url: x
+#    username: x
+#    password: x
+    driver-class-name: org.postgresql.Driver
+    type: com.alibaba.druid.pool.DruidDataSource
+    druid:
+      initial-size: 5  # 初始化时建立物理连接的个数
+      max-active: 10 # 最大连接池数量
+      max-wait: 5000 # 最大等待ms
+      min-idle: 5  # 最小连接池数量
+      use-unfair-lock: true
+  redis:
+#    host: master.aws-jp-google-allmodule-redis-nonprod.8loycm.apne1.cache.amazonaws.com
+#    port: 6379
+#    password: zaBuQ#AAuDyT)ybLxR3IoB
+    jedis:
+      pool:
+        max-active: 8
+        max-idle: 8
+        min-idle: 0
+        max-wait: 5
+        time-between-eviction-runs: 60000
+    database: 0
+    timeout: 5000
+    ssl: true
+  kafka:
+    bootstrap-servers: b-2.google-alltest.7n9wg1.c2.kafka.ap-northeast-1.amazonaws.com:9096,b-3.google-alltest.7n9wg1.c2.kafka.ap-northeast-1.amazonaws.com:9096,b-1.google-alltest.7n9wg1.c2.kafka.ap-northeast-1.amazonaws.com:9096
+    producer:
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      retries: 0
+    consumer:
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      group-id: google-google-trade-service-group-dev
+    properties:
+      sasl:
+        mechanism: SCRAM-SHA-512
+      security:
+        protocol: SASL_SSL
+      ssl:
+        truststore:
+          location: /home/devops/ssl/kafka.client.truststore.jks
+  autoconfigure:
+    exclude: org.springframework.boot.autoconfigure.mongo.MongoAutoConfiguration, org.springframework.boot.autoconfigure.data.mongo.MongoDataAutoConfiguration
+logging:
+  config: classpath:log4j2/log4j2-dev.xml
+#资金模块地址
+asset:
+  host: http://apisix-gateway.apisix/asset
+#风控模块地址
+risk:
+  host: http://apisix-gateway.apisix/risk-control
+  topic:
+    reduce-position: google-google-trading-reduce-position-dev
+    cancel-order: google-google-trading-cancel-order-dev
+    liquid-spot: google-google-trading-liquid-spot-dev
+    liquid-balance: google-google-trading-liquid-balance-dev
+    user-setting: google-google-trading-user-setting-dev
+    position-open: google-google-trading-position-open-dev
+    position-change: google-google-trading-position-change-dev
+#发单模块
+pdt:
+  server:
+    host: http://apisix-gateway.apisix
+  redis:
+#    host: master.aws-jp-google-crex-redis-dev.8loycm.apne1.cache.amazonaws.com
+#    port: 6379
+#    password: 0SPXEZgMfUOx#xd6wY0EH
+    timeout: 6000
+    database: 0
+    ssl: true
+common-config:
+  host: http://apisix-gateway.apisix/common-config
+kline:
+  host: https://internal-gateway-dev.googleainsider.com/kline
+kline-coingecko:
+  host: https://kline-api.googleainsider.com
+#用户量模块
+user-center:
+  host: http://apisix-gateway.apisix/user-center
+# ClubServer
+club:
+  host: https://internal-gateway-dev.googleainsider.com/club
+alarm:
+  host: https://alarm.googleainsider.com/server/alarm_server
+kafka:
+  topic:
+    ws-push: "google-google-ws-event-dev"
+    usertouch-push: google-google-usercenter-usertouch-dev
+    funding-push: google-google-referral-funding-trading-dev
+    aceup-tradefee-config-consumer: google-google-aceup-trade-fee-config-dev
+    buy-crypt-result: google-google-trading-buycrypto-convertion-dev
+    aip-swap-place-order-consumer: google-google-trade-swapplaceorder-dev
+    aip-swap-place-order-push: google-google-aip-swapplaceorder-dev
+    algo-transaction-statistics-consumer: google-google-trading-transaction-statistics-dev
+place:
+  max-num: 500
+trade:
+  otc-booking:
+    uid-arr:
+      - "616289d4d4b1a6d195d6f288"
+      - "6188cebfedbe1411be941866"
+      - "618b5dd7e84a00fca40d2510"
+      - "6191f3061c8ea878a165276b"
+  loop:
+    enabled: true
+  task:
+    enabled: true
+  traffic-disabled-control:
+    enabled: true
+  risk:
+    enabled: true
+  sensors:
+    log-path: /sensordata/google-trading/${HOSTNAME}-log/service.log
+xxl:
+  job.admin.addresses: https://google-task-dev.googlesider.com/xxl-job-admin
+  job.accessToken: hOVoDsiHWoOoIcpI2ICH
+  job.executor:
+    appname: trading-service-task-${spring.profiles.active}
+    address:
+    ip: google-trading-svc.google-${spring.profiles.active}.svc
+    port: 9999
+    logpath: ./log/xxl-job/
+    logretentiondays: 30
+sentry:
+  dsn: https://b1ae700aa61c4d48b15987303ee1fa7f@sentry-sit.googleainsider.com/50
+  enable-uncaught-exception-handler: true
+  debug: true
+  environment: dev

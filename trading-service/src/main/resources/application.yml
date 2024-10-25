@@ -1,0 +1,100 @@
+
+server:
+  port: 8010
+  shutdown: graceful
+  servlet:
+    context-path: /trading
+  tomcat:
+    accept-count: 200
+    max-connections: 8192
+    threads:
+      max: 400
+      min-spare: 10
+    mbeanregistry:
+      enabled: true
+    connection-timeout: 10s
+    accesslog:
+      enabled: true
+      directory: /dev
+      prefix: stdout
+      buffered: false
+      suffix:
+      file-date-format:
+      pattern: '%{yyyy-MM-dd HH:mm:ss.SSS}t %h %l %u "%r" %s %b'
+language:
+  header: client_language
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: '*'
+  server:
+    port: 8020
+    servlet:
+      context-path: /trading
+  metrics:
+    tags:
+      application: ${spring.application.name}
+    binders:
+      hystrix:
+        enabled: false
+  endpoint:
+    health:
+      show-details: always
+    loggers:
+      enabled: false
+    logfile:
+      enabled: false
+
+mybatis:
+  configuration:
+    cache-enabled: false
+  mapper-locations:
+    - classpath:mybatis/*.xml
+pagehelper:
+  default-count: false
+
+feign:
+  hystrix:
+    enabled: true
+  client:
+    config:
+      default:
+        connectTimeout: 3000  # 连接超时时间
+        readTimeout: 5000     # 读取超时时间
+      pdtClient:
+        connectTimeout: 3000  # 连接超时时间
+        readTimeout: 30000     # pdt单独设置30秒超时用于发单（IDK币种发单超时25S）
+#hystrix超时时间配置
+hystrix:
+  threadpool:
+    default:
+      coreSize: 200
+      maxQueueSize: 100
+      queueSizeRejectionThreshold: 100
+  command:
+    default: #服务名，填写default为所有服务
+      execution:
+        timeout:
+          enabled: true
+        isolation:
+          thread:
+            timeoutInMilliseconds: 20000
+    PdtClient#createTrade(CreateTradeReq):
+      execution:
+        timeout:
+          enabled: true
+        isolation:
+          thread:
+            timeoutInMilliseconds: 30000 # pdt单独设置30秒超时用于发单（IDK币种发单超时25S）
+
+knife4j:
+  enable: true
+  production: false
+
+logging:
+  config: classpath:log4j2/log4j2-${spring.profiles.active}.xml
+spring:
+  profiles:
+    active: local

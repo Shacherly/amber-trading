@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.google.backend.trading.dao.mapper.TradeSwapOrderMapper">
+
+    <select id="selectHistoryLite"
+            resultMap="com.google.backend.trading.dao.mapper.DefaultTradeSwapOrderMapper.BaseResultMap">
+        select
+        <include
+                refid="com.google.backend.trading.dao.mapper.DefaultTradeSwapOrderMapper.Base_Column_List"/>
+        from trade_swap_order
+        <where>
+            <if test="req.symbol != null and req.symbol !=''">
+                (from_coin = #{req.baseCoin} and to_coin = #{req.quoteCoin} or
+                from_coin = #{req.quoteCoin} and to_coin = #{req.baseCoin})
+            </if>
+            <if test="userId != null">
+                and uid = #{userId}
+            </if>
+            <if test="req.startTime != null and req.endTime != null">
+                and mtime between to_timestamp( #{req.startTime}/1000) and to_timestamp( #{req.endTime}/1000)
+            </if>
+            <if test="req.statusList != null ">
+                and status in
+                <foreach collection="req.statusList" item="status" open="(" close=")" separator=",">
+                    #{status}
+                </foreach>
+            </if>
+        </where>
+        order by CTIME DESC
+    </select>
+
+</mapper>

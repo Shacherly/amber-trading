@@ -1,0 +1,165 @@
+spring:
+  data:
+    mongodb:
+#      uri: "mongodb://readgoogle:dfTY7df_DFjdf7hdf@s-0iw3fb33531cc164.mongodb.japan.rds.aliyuncs.com:3717,s-0iwdd438cebca794.mongodb.japan.rds.aliyuncs.com:3717/google?authSource=admin"
+  datasource:
+#    url: x
+#    username: x
+#    password: x
+    driver-class-name: org.postgresql.Driver
+    type: com.alibaba.druid.pool.DruidDataSource
+    druid:
+      initial-size: 50  # 初始化时建立物理连接的个数
+      max-active: 200 # 最大连接池数量
+      max-wait: 5000 # 最大等待ms
+      min-idle: 50  # 最小连接池数量
+      use-unfair-lock: true
+  redis:
+#    host: x
+#    port: x
+#    password: x
+    jedis:
+      pool:
+        max-active: 8
+        max-idle: 8
+        min-idle: 0
+        max-wait: 5
+        time-between-eviction-runs: 60000
+    database: 2
+    timeout: 5000
+    ssl: true
+  kafka:
+    bootstrap-servers: b-2.google-prod-kaf.i6c4mm.c2.kafka.ap-northeast-1.amazonaws.com:9096,b-1.google-prod-kaf.i6c4mm.c2.kafka.ap-northeast-1.amazonaws.com:9096,b-3.google-prod-kaf.i6c4mm.c2.kafka.ap-northeast-1.amazonaws.com:9096
+    producer:
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      retries: 0
+    consumer:
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      group-id: google-google-trade-service-group-prod
+    properties:
+      sasl:
+        mechanism: SCRAM-SHA-512
+      security:
+        protocol: SASL_SSL
+
+#资金模块地址
+asset:
+  host: http://google.gateway.svc/asset
+#风控模块地址
+risk:
+  host: http://google.gateway.svc/risk-control
+  topic:
+    reduce-pouation: google-google-trading-reduce-pouation-prod
+    cancel-order: google-google-trading-cancel-order-prod
+    liquid-spot: google-google-trading-liquid-spot-prod
+    liquid-balance: google-google-trading-liquid-balance-prod
+    user-setting: google-google-trading-user-setting-prod
+    position-open: google-google-trading-position-open-prod
+    position-change: google-google-trading-position-change-prod
+#发单模块
+pdt:
+  server:
+    host: http://google.gateway.svc
+  redis:
+#    host: x
+#    port: x
+#    password: x
+    timeout: 6000
+    database: 0
+    ssl: true
+common-config:
+  host: http://google.gateway.svc/common-config
+kline:
+  host: http://google.gateway.svc/kline
+kline-coingecko:
+  host: https://kline-api.googleainsider.com
+user-center:
+  host: http://google.gateway.svc/user-center
+# ClubServer
+club:
+  host: http://google.gateway.svc/club
+alarm:
+  host: https://alarm.googleainsider.com/server/alarm_server
+kafka:
+  topic:
+    ws-push: "google-google-ws-event-prod"
+    usertouch-push: google-google-usercenter-usertouch-prod
+    funding-push: google-google-referral-funding-trading-prod
+    aceup-tradefee-config-consumer: google-google-aceup-trade-fee-config-prod
+    buy-crypt-result: google-google-trading-buycrypto-convertion-prod
+    aip-swap-place-order-consumer: google-google-trade-swapplaceorder-prod
+    aip-swap-place-order-push: google-google-aip-swapplaceorder-prod
+    algo-transaction-statistics-consumer: google-google-trading-transaction-statistics-prod
+knife4j:
+  enable: false
+  production: true
+place:
+  max-num: 500
+trade:
+  otc-booking:
+#    TODO 待迁移到数据库表 trade_user_booking_list
+    uid-arr:
+      - "61443c8ec55c419134b72f4f"
+      - "60fe6f4802022412d8588562"
+      - "611b47a9a163115a839bf566"
+      - "60fe6e1702022412d8587bd9"
+      - "60fe6e5002022412d8587d95"
+      - "60fe6e4d02022412d8587d7d"
+  traders:
+    uid-arr:
+      - "61443c8ec55c419134b72f4f"
+      - "60fe6f4802022412d8588562"
+      - "611b47a9a163115a839bf566"
+      - "60fe6e1702022412d8587bd9"
+      - "60fe6e5002022412d8587d95"
+      - "60fe6e4d02022412d8587d7d"
+      - "6107bdb80cbf75358bebf514"
+      - "60fe6eea02022412d8588267"
+      - "60fe6e0f02022412d8587b98"
+      - "60fe6f0b02022412d8588373"
+  idk:
+    uid-arr:
+      - "60fe6eb602022412d85880c8"
+      - "60d44ee2d818e660ca4f0527"
+      - "60fe6e4d02022412d8587d7d"
+  risk:
+    enabled: true
+  loop:
+    enabled: true
+  task:
+    enabled: true
+  traffic-disabled-control:
+    enabled: false
+  sensors:
+    log-path: /sensordata/google-trading/${HOSTNAME}-log/service.log
+  margin:
+    ip-compliance: false
+xxl:
+  job.admin.addresses: https://google-task.googlesider.com/xxl-job-admin
+  job.accessToken: SAewvZhn7e7fFNjG4j
+  job.executor:
+    appname: trading-service-task-${spring.profiles.active}
+    address:
+    ip: google-trading-svc.google.svc
+    port: 9999
+    logpath: ./log/xxl-job/
+    logretentiondays: 30
+server:
+  tomcat:
+    accesslog:
+      enabled: true
+app-migrate:
+  pgsql:
+#    一轮 1129
+#    url: jdbc:postgresql://pgm-0iw202o304yp4ee475650.pgsql.japan.rds.aliyuncs.com:5432/google
+#    二轮 1209
+#    url: jdbc:postgresql://pgm-0iwr7280339e7i8m75650.pgsql.japan.rds.aliyuncs.com:5432/google
+    username: readgoogle
+    password: sd7TGtsd_sdYG6f7HtG
+sentry:
+  dsn: http://e85141bb4f984c118d77801acaefc352@sentry.googleainsider.com:9000/15
+  enable-uncaught-exception-handler: true
+  debug: false
+  environment: prod
